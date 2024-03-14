@@ -4,9 +4,15 @@
 
 import { fireEvent, screen, waitFor } from "@testing-library/dom";
 import BillsUI from "../views/BillsUI.js";
-import { bills } from "../fixtures/bills.js";
+import {
+  bills,
+  corruptedBills,
+  formattedBills,
+  formattedCorruptedBills,
+} from "../fixtures/bills.js";
 import { ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
+import storeMock from "../__mocks__/store.js";
 import Bills from "../containers/Bills.js";
 
 import router from "../app/Router.js";
@@ -46,12 +52,67 @@ describe("Given I am connected as an employee", () => {
 
     test("Then can request to create a new bill", async () => {
       document.body.innerHTML = BillsUI({ data: bills });
-      const handleClickNewBillMock = jest
-        .spyOn(Bills.prototype, "handleClickNewBill")
-        .mockReturnValue();
+
+      // we have to mock navigation to test it
+      const onNavigate = jest.fn();
+      const store = jest.fn();
+      const BillsInstance = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorageMock,
+      });
 
       fireEvent.click(screen.getByTestId("btn-new-bill"));
-      expect(handleClickNewBillMock).toHaveBeenCalled();
+      expect(BillsInstance.onNavigate).toHaveBeenCalled();
+    });
+
+    test("Then should be able to trigger bills details modal opening", () => {
+      // we have to mock navigation to test it
+      const onNavigate = jest.fn();
+      const store = jest.fn();
+
+      document.body.innerHTML = BillsUI({ data: bills });
+      const BillsInstance = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorageMock,
+      });
+
+      BillsInstance.handleClickIconEye = jest.fn();
+      fireEvent.click(screen.getAllByTestId("icon-eye")[0]);
+      expect(BillsInstance.handleClickIconEye).toHaveBeenCalled();
+    });
+
+    test("Then should retrieve the list of bills", async () => {
+      const onNavigate = jest.fn();
+      const store = jest.fn();
+
+      const BillsInstance = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorageMock,
+      });
+      BillsInstance.store = storeMock;
+      expect(await BillsInstance.getBills()).toEqual(formattedBills);
+    });
+
+    test("Then should retrieve bills with corrupted date", async () => {
+      const onNavigate = jest.fn();
+      const store = storeMock;
+
+      store.bills().list = jest.fn(() => Promise.resolve(corruptedBills));
+
+      const BillsInstance = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorageMock,
+      });
+
+      expect(await BillsInstance.getBills()).toEqual(formattedCorruptedBills);
     });
   });
 });
