@@ -82,7 +82,7 @@ describe("Given I am connected as an employee", () => {
 
       BillsInstance.handleClickIconEye = jest.fn();
       fireEvent.click(screen.getAllByTestId("icon-eye")[0]);
-      expect(BillsInstance.handleClickIconEye).toHaveBeenCalled();
+      expect(BillsInstance.handleClickIconEye).toHaveBeenCalledTimes(1);
     });
 
     test("Then should retrieve the list of bills", async () => {
