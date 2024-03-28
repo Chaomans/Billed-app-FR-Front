@@ -22,9 +22,7 @@ export default class NewBill {
     const inp = this.document.querySelector(`input[data-testid="file"]`);
     const submit = this.document.querySelector(`#btn-send-bill`);
     const file = inp.files[0];
-    const filePath = e.target.value.split(/\\/g);
-    const fileName = filePath[filePath.length - 1];
-    const fileExt = fileName.split(".").slice(-1)[0];
+    const fileExt = file.name.split(".").slice(-1)[0];
     if (
       !inp.accept
         .split(",")
@@ -54,19 +52,14 @@ export default class NewBill {
         },
       })
       .then(({ fileUrl, key }) => {
-        console.log(fileUrl);
         this.billId = key;
         this.fileUrl = fileUrl;
-        this.fileName = fileName;
+        this.fileName = file.name;
       })
       .catch((error) => console.error(error));
   };
   handleSubmit = (e) => {
     e.preventDefault();
-    console.log(
-      'e.target.querySelector(`input[data-testid="datepicker"]`).value',
-      e.target.querySelector(`input[data-testid="datepicker"]`).value
-    );
     const email = JSON.parse(localStorage.getItem("user")).email;
     const bill = {
       email,
