@@ -41,6 +41,11 @@ export default class {
         .bills()
         .list()
         .then((snapshot) => {
+          return snapshot.sort((a, b) =>
+            Date.parse(a.date) < Date.parse(b.date) ? 1 : -1
+          );
+        })
+        .then((snapshot) => {
           const bills = snapshot.map((doc) => {
             try {
               return {

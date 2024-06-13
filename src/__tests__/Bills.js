@@ -16,6 +16,7 @@ import storeMock from "../__mocks__/store.js";
 import Bills from "../containers/Bills.js";
 
 import router from "../app/Router.js";
+import { formatDate } from "../app/format.js";
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -38,15 +39,29 @@ describe("Given I am connected as an employee", () => {
       const windowIcon = screen.getByTestId("icon-window");
       //to-do write expect expression
     });
-    test("Then bills should be ordered from earliest to latest", () => {
-      document.body.innerHTML = BillsUI({ data: bills });
+    test("Then bills should be ordered from earliest to latest", async () => {
+      const onNavigate = jest.fn();
+      const store = storeMock;
+      const BillsInstance = new Bills({
+        document,
+        onNavigate,
+        store,
+        localStorageMock,
+      });
+      BillsInstance.store = storeMock;
+      document.body.innerHTML = BillsUI({
+        data: await BillsInstance.getBills(),
+      });
       const dates = screen
         .getAllByText(
-          /^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i
+          // /^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i
+          /^\d\d? ([A-Z][a-zé]{2}\.) (\d\d)$/i
         )
         .map((a) => a.innerHTML);
-      const antiChrono = (a, b) => (a < b ? 1 : -1);
-      const datesSorted = [...dates].sort(antiChrono);
+      const antiChrono = (a, b) => (Date.parse(a) < Date.parse(b) ? 1 : -1);
+      const datesSorted = [...bills.map((b) => b.date)]
+        .sort(antiChrono)
+        .map((date) => formatDate(date));
       expect(dates).toEqual(datesSorted);
     });
 
